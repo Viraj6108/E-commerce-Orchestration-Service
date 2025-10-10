@@ -3,6 +3,7 @@ package com.webdev.ws.config;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -27,7 +29,7 @@ import org.springframework.util.backoff.FixedBackOff;
 
 import com.webdev.ws.errors.NotRetryableException;
 import com.webdev.ws.errors.RetryableException;
-
+//Orchestration service configuration
 @Configuration
 public class KafkaConfiguration {
 	
@@ -44,6 +46,12 @@ public class KafkaConfiguration {
 	private int requestTimeOut;
 	@Autowired
 	Environment env;
+	
+	@Value("${payment.process.command}")
+	private String PAYMENT_TOPIC_NAME;
+	
+	private Integer TOPIC_PARTITIONS=3;
+	private Integer TOPIC_REPLICAS=2;
 	
 	@Bean
 	ProducerFactory<String, Object> producerFactory() {
@@ -103,5 +111,15 @@ public class KafkaConfiguration {
 		factory.setCommonErrorHandler(errorHandler);
 		
 		return factory;
+	}
+	
+	
+	@Bean
+	NewTopic paymentCommandTopic()
+	{
+		return TopicBuilder.name(PAYMENT_TOPIC_NAME)
+				.partitions(TOPIC_PARTITIONS)
+				.replicas(TOPIC_REPLICAS)
+				.build();
 	}
 }
