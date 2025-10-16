@@ -50,6 +50,9 @@ public class KafkaConfiguration {
 	@Value("${payment.process.command}")
 	private String PAYMENT_TOPIC_NAME;
 	
+	@Value("${order.failed.event}")
+	private String ORDER_COMMAND;
+	
 	private Integer TOPIC_PARTITIONS=3;
 	private Integer TOPIC_REPLICAS=2;
 	
@@ -118,6 +121,14 @@ public class KafkaConfiguration {
 	NewTopic paymentCommandTopic()
 	{
 		return TopicBuilder.name(PAYMENT_TOPIC_NAME)
+				.partitions(TOPIC_PARTITIONS)
+				.replicas(TOPIC_REPLICAS)
+				.build();
+	}
+	@Bean
+	NewTopic orderCommand()
+	{
+		return TopicBuilder.name(ORDER_COMMAND)
 				.partitions(TOPIC_PARTITIONS)
 				.replicas(TOPIC_REPLICAS)
 				.build();

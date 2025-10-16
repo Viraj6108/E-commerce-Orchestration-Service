@@ -14,13 +14,17 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
+import com.webdev.ws.commands.OrderStatusFailedCommand;
+import com.webdev.ws.commands.OrderStatusSuccessCommand;
 import com.webdev.ws.commands.PaymentProceedCommand;
 import com.webdev.ws.commands.ProductReserveCommand;
 import com.webdev.ws.errors.RetryableException;
 import com.webdev.ws.events.OrderCreatedEvent;
+import com.webdev.ws.events.OrderFailedEvent;
 import com.webdev.ws.events.PaymentProcessEvent;
+import com.webdev.ws.events.ProductReservationFailedEvent;
 
-@KafkaListener(topics = {"order-event","product-event"} ,groupId = "orchestration-group")
+@KafkaListener(topics = {"order-event","product-event","payment-event"} ,groupId = "orchestration-group")
 @Component
 public class HandlerkafkaEvents {
 
@@ -33,6 +37,9 @@ public class HandlerkafkaEvents {
 	@Value("${payment.process.command}")
 	private String PAYMENT_TOPIC;
 	
+	@Value("${order.failed.event}")
+	private String Failed_Topic;
+	
 	private KafkaTemplate<String,Object>kafkaTemplate;
 	
 	
@@ -40,11 +47,11 @@ public class HandlerkafkaEvents {
 	  HandlerkafkaEvents(KafkaTemplate<String,Object>kafkaTemplate)
 	  { this.kafkaTemplate = kafkaTemplate; 
 	  }
-	 
+	 //After order is created 
 	@KafkaHandler
 	public void handle(@Payload OrderCreatedEvent event) throws InterruptedException, ExecutionException
 	{
-		
+		try {
 		  ProductReserveCommand reserve = new ProductReserveCommand();
 		  reserve.setProductId(event.getProductId());
 		  reserve.setQuantity(event.getQuantity());
@@ -56,15 +63,14 @@ public class HandlerkafkaEvents {
 		  logger.info("TOpic Name"+result.getRecordMetadata().topic());
 		  logger.info("Event sent"+reserve.getProductId().toString()+" "+
 		  TOPIC_NAME+" "+reserve);
+		}catch(Exception e)
+		{
+			OrderFailedEvent failedEvent = new OrderFailedEvent(event.getOrderId(),event.getProductId());
+			kafkaTemplate.send(Failed_Topic,failedEvent);
+		}
 		 
 	}
 	
-	/*
-	 * @KafkaHandler public void handleProductReserve(@Payload ProductReserveCommand
-	 * command) { logger.error("At product reserve handler");
-	 * System.err.print("ProductReserveCommand" + command.getQuantity() + "" +
-	 * command.getProductId()); }
-	 */
 	 
 	//handler payment related commands
 	@KafkaHandler()
@@ -85,6 +91,38 @@ public class HandlerkafkaEvents {
 			throw new RetryableException("Retrying exception ");
 			
 		}
-		
 	}
+	
+	//ProductReservations is failed due to unavailability of product quantity
+		@KafkaHandler
+		public void handleProductReservationFailed(@Payload ProductReservationFailedEvent event)throws Exception
+		{
+			try {
+			OrderStatusFailedCommand command = new OrderStatusFailedCommand(event.getOrderId(),event.getProductId());
+			ProducerRecord<String,Object>records=new ProducerRecord<String, Object>(Failed_Topic,null, command);
+				SendResult<String, Object>result=	kafkaTemplate.send(records).get();
+			logger.info("Sent to topic "+result.getRecordMetadata().topic());
+			}catch(Exception e)
+			{
+				throw new Exception("Exception Occured"+e.getLocalizedMessage());
+			}
+		}
+		
+		//CHange state of order after successful payment 
+		@KafkaHandler
+		public void handleSuccessOrderStatus(@Payload OrderStatusSuccessCommand command)
+		{
+			OrderStatusSuccessCommand Ordercommand = new OrderStatusSuccessCommand(command.getOrderId());
+			kafkaTemplate.send("order-command",null,Ordercommand);
+		}
+		
+		
+		@KafkaHandler(isDefault = true)
+		public void defaultHandler(Object object)
+		{
+			System.err.print("Unknown Object"+object.getClass());
+		}
+		
+		
+	
 }
