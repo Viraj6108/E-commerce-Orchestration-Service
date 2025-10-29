@@ -3,10 +3,7 @@ package com.webdev.ws.config;
 import java.util.HashMap;
 import java.util.Map;
 
-<<<<<<< HEAD
 import org.apache.kafka.clients.admin.NewTopic;
-=======
->>>>>>> ee1dee86d18e49552c52c51c8ff6355da4059354
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -17,10 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-<<<<<<< HEAD
 import org.springframework.kafka.config.TopicBuilder;
-=======
->>>>>>> ee1dee86d18e49552c52c51c8ff6355da4059354
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -112,7 +106,6 @@ public class KafkaConfiguration {
 		
 		return factory;
 	}
-<<<<<<< HEAD
 	
 	@Bean
 	NewTopic orderCommand()
@@ -123,6 +116,4 @@ public class KafkaConfiguration {
 				.partitions(3)
 				.build();
 		}
-=======
->>>>>>> ee1dee86d18e49552c52c51c8ff6355da4059354
 }
