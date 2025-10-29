@@ -1,9 +1,15 @@
 package com.webdev.ws.service;
 
+<<<<<<< HEAD
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+=======
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+>>>>>>> ee1dee86d18e49552c52c51c8ff6355da4059354
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -11,6 +17,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
+<<<<<<< HEAD
 import com.webdev.ws.commands.OrderReservationFailedCommand;
 import com.webdev.ws.commands.OrderStatusCommand;
 import com.webdev.ws.commands.PaymentProceedCommand;
@@ -22,6 +29,13 @@ import com.webdev.ws.events.PaymentSuccessfulEvent;
 import com.webdev.ws.events.ProductReservationFailedEvent;
 
 @KafkaListener(topics = {"order-event","product-event","payment-event"} ,groupId = "orchestration-group")
+=======
+import com.webdev.ws.commands.ProductReserveCommand;
+import com.webdev.ws.errors.RetryableException;
+import com.webdev.ws.events.OrderCreatedEvent;
+
+@KafkaListener(topics = {"order-event"} ,groupId = "orchestration-group")
+>>>>>>> ee1dee86d18e49552c52c51c8ff6355da4059354
 @Component
 public class HandlerkafkaEvents {
 
@@ -29,12 +43,15 @@ public class HandlerkafkaEvents {
 	@Value("${product.reserve.command}")
 	private String TOPIC_NAME;
 	
+<<<<<<< HEAD
 	@Value("${payment.process.command}")
 	String PAYMENT_COMMAND;
 	
 	@Value("${product.order-status.command}")
 	private String ORDER_COMMAND;
 	
+=======
+>>>>>>> ee1dee86d18e49552c52c51c8ff6355da4059354
 	private KafkaTemplate<String,Object>kafkaTemplate;
 	
 	
@@ -49,12 +66,17 @@ public class HandlerkafkaEvents {
 		  ProductReserveCommand reserve = new ProductReserveCommand();
 		  reserve.setProductId(event.getProductId());
 		  reserve.setQuantity(event.getQuantity());
+<<<<<<< HEAD
 		  reserve.setOrderId(event.getOrderId());
 		  kafkaTemplate.send(TOPIC_NAME,UUID.randomUUID().toString(),reserve);
+=======
+		  kafkaTemplate.send(TOPIC_NAME,reserve.getProductId().toString(),reserve);
+>>>>>>> ee1dee86d18e49552c52c51c8ff6355da4059354
 		  logger.info("Event sent"+reserve.getProductId().toString()+" "+
 		  TOPIC_NAME+" "+reserve);
 		 
 	}
+<<<<<<< HEAD
 	
 	@KafkaHandler
 	public void handle(@Payload PaymentProceedCommand command)
@@ -103,4 +125,12 @@ public class HandlerkafkaEvents {
 	 }
 	 
 	 
+=======
+	/*
+	 * @KafkaHandler public void handleProductReserve(@Payload ProductReserveCommand
+	 * command) { logger.error("At product reserve handler");
+	 * System.err.print("ProductReserveCommand"+command.getQuantity()+""+
+	 * command.getProductId()); }
+	 */
+>>>>>>> ee1dee86d18e49552c52c51c8ff6355da4059354
 }
