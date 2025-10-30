@@ -13,12 +13,14 @@ import org.springframework.stereotype.Component;
 
 import com.webdev.ws.commands.OrderReservationFailedCommand;
 import com.webdev.ws.commands.OrderStatusCommand;
+import com.webdev.ws.commands.ProductQuantityReverseCommand;
 import com.webdev.ws.commands.PaymentProceedCommand;
 import com.webdev.ws.commands.ProductReserveCommand;
 import com.webdev.ws.events.OrderCreatedEvent;
 import com.webdev.ws.events.PaymentFailedEvent;
 import com.webdev.ws.events.PaymentProcessEvent;
 import com.webdev.ws.events.PaymentSuccessfulEvent;
+import com.webdev.ws.events.ProductQuantityReversedEvent;
 import com.webdev.ws.events.ProductReservationFailedEvent;
 
 @KafkaListener(topics = {"order-event","product-event","payment-event"} ,groupId = "orchestration-group")
@@ -93,14 +95,24 @@ public class HandlerkafkaEvents {
 	 
 	
 	// this is to handle payment failed event 
+@KafkaHandler
 	 public void handleFailure(@Payload PaymentFailedEvent event)
 	 {
 		 logger.info("payment is failed revert product quantity");
-		 // Revert product quantity in product and after its reverted then send another 
-		 //event handle it in orchestration service and send a command to set the order status to FAILED
-		 
+		 ProductQuantityReverseCommand command = new ProductQuantityReverseCommand(event.getOrderId(),event.getQuantity(),event.getProductId());
+		 kafkaTemplate.send(TOPIC_NAME,command);
+		 logger.info("Event sent to reverse order quantity");
 		 
 	 }
+//After product quantity is reversed 
 	 
+@KafkaHandler
+public void handleFailure(@Payload ProductQuantityReversedEvent event)
+{
+	OrderReservationFailedCommand command = new OrderReservationFailedCommand(event.getOrderId());
+	kafkaTemplate.send(ORDER_COMMAND,command);
+	logger.info("Order id sent to order command to change order status as Failed");
+	
+}
 	 
 }
